@@ -1,0 +1,11 @@
+*.swp
+*.swo
+*~
+__*__
+*.txt
+*wrap*
+build/
+__pycache__/
+*.css
+*.rpm
+dist/
