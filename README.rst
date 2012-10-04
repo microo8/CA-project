@@ -17,4 +17,4 @@ Project theme C03 - Inverse Kinematics:
         - Select bone by clicking, change rotation angle by dragging
         - Child bones must be transformed correctly (can use transformation 3x3 matrices - they handle both rotation and translation)
 - Implement inverse kinematics (relaxation by gradient calculation)
-        -User can move end bone - IK solves bones in the IK sequence
+        - User can move end bone - IK solves bones in the IK sequence
