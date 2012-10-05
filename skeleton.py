@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 from gtklib import ObjGetter
 import numpy as np
 import os, pickle
 
 BONE_LENGTH = 30
+PARTICLE_SIZE = 5
 
 class Particle:
     def __init__(self, parrent, position, mass):
@@ -16,6 +17,7 @@ class Particle:
         if self.parrent is not None:
             self.parrent.descendants.append(self)
         self.descendants = []
+
 
 class System:
     def __init__(self, alloc, filename=None):
@@ -31,11 +33,16 @@ class System:
         for part in self.particles:
             yield part
 
+
 class DrawArea:
     def __init__(self):
         self.sys = None
         self.width = 1
         self.height = 1
+        self.pressed1 = False
+        self.pressed2 = False
+        self.selected_particle = None
+        self.selected_particle2 = None
 
     def set_drawarea(self, drawarea):
         self.drawarea = drawarea
@@ -56,17 +63,80 @@ class DrawArea:
                     cr.line_to(x, y)
                     cr.close_path()
             cr.stroke()
-            cr.set_source_rgb (0.8, 0, 0)
             for part in self.sys:
                 x, y = self.tra.dot(part.position)[:2]
+                if part is self.selected_particle:
+                    cr.set_source_rgb (0, 0.75, 0)
+                    cr.move_to(x,y)
+                    cr.arc(x, y, PARTICLE_SIZE+3, 0, 2*np.pi);
+                    cr.fill()
+                cr.set_source_rgb (0.75, 0, 0)
                 cr.move_to(x,y)
-                cr.arc(x, y, 5, 0, 2*np.pi);
-            cr.fill()
+                cr.arc(x, y, PARTICLE_SIZE, 0, 2*np.pi);
+                cr.fill()
     
     def resize(self, widget, allocation):
         self.tra = np.array([[allocation.width/self.width, 0, 0],
                              [0, allocation.height/self.height, 0],
                              [0, 0, 1]])
+
+    def press(self, eventbox, event):
+        if event.type == Gdk.EventType.BUTTON_PRESS:
+            if event.button == 3:
+                self.pressed2 = True
+            elif event.button == 1: 
+                self.pressed1 = True
+                if self.sys is not None:
+                    pos = np.array([event.x, event.y, 0])
+                    if self.selected_particle is None:
+                        for part in self.sys:
+                            if np.linalg.norm(self.tra.dot(part.position) - pos) <= PARTICLE_SIZE:
+                                self.selected_particle = part
+                                break
+                    else:
+                        for part in self.sys:
+                            if np.linalg.norm(self.tra.dot(part.position) - pos) <= PARTICLE_SIZE:
+                                self.selected_particle2 = part
+                                break
+                        else:
+                            self.selected_particle = None
+                            self.selected_particle2 = None
+                self.drawarea.queue_draw()
+
+    def release(self, eventbox, event):
+        if event.type == Gdk.EventType.BUTTON_RELEASE:
+            if event.button == 3:
+                print(self.pressed2)
+                if self.pressed2 and self.selected_particle is not None:
+                    inv_tra = np.linalg.inv(self.tra)
+                    pos = inv_tra.dot(np.array([event.x, event.y, 0]))
+                    pos -= self.selected_particle.position
+                    pos /= np.linalg.norm(pos)
+                    pos *= BONE_LENGTH
+                    part = Particle(self.selected_particle, self.selected_particle.position + pos, 1)
+                    self.sys.particles.append(part)
+                    self.drawarea.queue_draw()
+                self.pressed2 = False
+            elif event.button == 1: 
+                self.pressed1 = False
+                self.selected_particle2 = None
+
+    def motion(self, eventbox, event):
+        if self.pressed1 and self.selected_particle is not None and self.selected_particle2 is not None:
+            inv_tra = np.linalg.inv(self.tra)
+            pos = inv_tra.dot(np.array([event.x, event.y, 0]))
+            root_pos = self.selected_particle.position - pos
+            root_part2 = self.selected_particle.position - self.selected_particle2.position
+            root_pos /= np.linalg.norm(root_pos)
+            root_part2 /= np.linalg.norm(root_part2)
+            cos_phi = root_part2.dot(root_pos)
+            sin_phi = np.sqrt(1-cos_phi**2)
+            rot = np.array([[cos_phi, -sin_phi, 0],
+                            [sin_phi, cos_phi,  0],
+                            [0,0,1]])
+            tmp = self.selected_particle2.position - self.selected_particle.position
+            self.selected_particle2.position = rot.dot(tmp) + self.selected_particle.position
+            self.drawarea.queue_draw()
 
 
 class MainWindow(ObjGetter):
@@ -82,7 +152,10 @@ class MainWindow(ObjGetter):
                    "forward" : self.forward,
                    "draw" : self.darea.draw,
                    "resize" : self.darea.resize,
-                   "about" : self.about}
+                   "about" : self.about,
+                   "press" : self.darea.press, 
+                   "release" : self.darea.release,
+                   "motion" : self.darea.motion}
         return signals
 
     def about(self, item):
