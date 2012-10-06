@@ -78,6 +78,7 @@ class DrawArea:
                     cr.fill()
                 cr.set_source_rgb (0.75, 0, 0)
                 cr.move_to(x,y)
+                print(self.pressed2)
                 cr.arc(x, y, PARTICLE_SIZE, 0, 2*np.pi);
                 cr.fill()
     
@@ -112,7 +113,6 @@ class DrawArea:
     def release(self, eventbox, event):
         if event.type == Gdk.EventType.BUTTON_RELEASE:
             if event.button == 3:
-                print(self.pressed2)
                 if self.pressed2 and self.selected_particle is not None:
                     inv_tra = np.linalg.inv(self.tra)
                     pos = inv_tra.dot(np.array([event.x, event.y, 0]))
@@ -167,13 +167,50 @@ class MainWindow(ObjGetter):
                    "about" : self.about,
                    "press" : self.darea.press, 
                    "release" : self.darea.release,
-                   "motion" : self.darea.motion}
+                   "motion" : self.darea.motion,
+                   "save" : self.save,
+                   "load" : self.load}
         return signals
 
     def about(self, item):
         resp = self.aboutdialog.run()
         if resp == Gtk.ResponseType.DELETE_EVENT or resp == Gtk.ResponseType.CANCEL:
             self.aboutdialog.hide()
+
+    def load(self, item):
+        dialog = Gtk.FileChooserDialog("Vyberte súbor",
+                                        self.window,
+                                        Gtk.FileChooserAction.OPEN,
+                                        (Gtk.STOCK_CANCEL,
+                                        Gtk.ResponseType.CANCEL,
+                                        Gtk.STOCK_OPEN,
+                                        Gtk.ResponseType.OK))
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            filename = dialog.get_filename()
+            dialog.destroy()
+            with open(filename, 'rb') as f:
+                self.darea.sys.particles = pickle.load(f)
+            self.drawarea.queue_draw()
+        else:
+            dialog.destroy()
+    def save(self, item):
+        dialog = Gtk.FileChooserDialog("Vyberte súbor",
+                                        self.window,
+                                        Gtk.FileChooserAction.SAVE,
+                                        (Gtk.STOCK_CANCEL,
+                                        Gtk.ResponseType.CANCEL,
+                                        Gtk.STOCK_OPEN,
+                                        Gtk.ResponseType.OK))
+        dialog.set_do_overwrite_confirmation(True)
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            filename = dialog.get_filename()
+            dialog.destroy()
+            with open(filename, 'wb') as f:
+                pickle.dump(self.darea.sys.particles, f)
+        else:
+            dialog.destroy()
 
     def forward(self, button=None):
         #TODO
