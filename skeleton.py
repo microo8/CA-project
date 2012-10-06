@@ -33,6 +33,12 @@ class System:
         for part in self.particles:
             yield part
 
+    def rotate_particles(self, part, rot, center):
+        tmp = part.position - center
+        part.position = rot.dot(tmp) + center
+        for desc in part.descendants:
+            self.rotate_particles(desc, rot, center)
+
 
 class DrawArea:
     def __init__(self):
@@ -95,7 +101,7 @@ class DrawArea:
                                 break
                     else:
                         for part in self.sys:
-                            if np.linalg.norm(self.tra.dot(part.position) - pos) <= PARTICLE_SIZE:
+                            if np.linalg.norm(self.tra.dot(part.position) - pos) <= PARTICLE_SIZE and part in self.selected_particle.descendants:
                                 self.selected_particle2 = part
                                 break
                         else:
@@ -131,13 +137,19 @@ class DrawArea:
             root_part2 /= np.linalg.norm(root_part2)
             cos_phi = root_part2.dot(root_pos)
             sin_phi = np.sqrt(1-cos_phi**2)
-            rot = np.array([[cos_phi, -sin_phi, 0],
-                            [sin_phi, cos_phi,  0],
-                            [0,0,1]])
-            tmp = self.selected_particle2.position - self.selected_particle.position
-            self.selected_particle2.position = rot.dot(tmp) + self.selected_particle.position
+            x1, y1, _ = root_part2
+            x2, y2, _ = root_pos
+            rot = None
+            if (x2-x1)*(y2+y1) < 0:
+                rot = np.array([[cos_phi, -sin_phi, 0],
+                                [sin_phi, cos_phi,  0],
+                                [0,0,1]])
+            else:
+                rot = np.array([[cos_phi, sin_phi, 0],
+                                [-sin_phi, cos_phi,  0],
+                                [0,0,1]])
+            self.sys.rotate_particles(self.selected_particle2, rot, self.selected_particle.position)
             self.drawarea.queue_draw()
-
 
 class MainWindow(ObjGetter):
     def __init__(self):
