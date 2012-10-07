@@ -3,10 +3,12 @@
 from gi.repository import Gtk, Gdk
 from gtklib import ObjGetter
 import numpy as np
-import os, pickle
+import os, pickle, time
+from threading import Thread
 
 BONE_LENGTH = 30
 PARTICLE_SIZE = 5
+STEP = 0.5
 
 class Particle:
     def __init__(self, parrent, position, mass):
@@ -20,8 +22,10 @@ class Particle:
 
 
 class System:
-    def __init__(self, alloc, filename=None):
+    def __init__(self, drawarea, filename=None):
         if filename is None:
+            self.drawarea = drawarea
+            alloc = self.drawarea.get_allocation()
             head = Particle(None, np.array([alloc.width/2, alloc.height/4,0]), 1)
             child = Particle(head, np.array([alloc.width/2, alloc.height/4+BONE_LENGTH,0]), 1)
             self.particles = [head, child]
@@ -39,6 +43,10 @@ class System:
         for desc in part.descendants:
             self.rotate_particles(desc, rot, center)
 
+    def forward(self, step):
+        time.sleep(step)
+        
+
 
 class DrawArea:
     def __init__(self):
@@ -55,7 +63,7 @@ class DrawArea:
         self.width = self.drawarea.get_allocation().width
         self.height = self.drawarea.get_allocation().height
         self.tra = np.eye(3)
-        self.sys = System(self.drawarea.get_allocation())
+        self.sys = System(self.drawarea)
 
     def draw(self, drawarea, cr):
         cr.set_source_rgb (0, 0, 0)
@@ -78,7 +86,6 @@ class DrawArea:
                     cr.fill()
                 cr.set_source_rgb (0.75, 0, 0)
                 cr.move_to(x,y)
-                print(self.pressed2)
                 cr.arc(x, y, PARTICLE_SIZE, 0, 2*np.pi);
                 cr.fill()
     
@@ -150,6 +157,14 @@ class DrawArea:
                                 [0,0,1]])
             self.sys.rotate_particles(self.selected_particle2, rot, self.selected_particle.position)
             self.drawarea.queue_draw()
+        elif self.pressed1 and self.selected_particle is not None:
+            inv_tra = np.linalg.inv(self.tra)
+            pos = inv_tra.dot(np.array([event.x, event.y, 0]))
+            delta = self.selected_particle.position - pos
+            for part in self.sys:
+                part.position -= delta
+            self.drawarea.queue_draw()
+
 
 class MainWindow(ObjGetter):
     def __init__(self):
