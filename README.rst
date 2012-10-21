@@ -18,3 +18,22 @@ Project theme C03 - Inverse Kinematics:
         - Child bones must be transformed correctly (can use transformation 3x3 matrices - they handle both rotation and translation)
 - Implement inverse kinematics (relaxation by gradient calculation)
         - User can move end bone - IK solves bones in the IK sequence
+
+Implementation
+--------------
+
+:programing language: `python 3.2 <www.python.org>`_
+:graphical user interface: `GTK3 <https://live.gnome.org/PyGObject>`_
+:mathematical library: `numpy <http://numpy.scipy.org/>`_
+
+Progress
+--------
+
+- Scene with sceleton: |screenshot01|
+        - user can create new bones by clicking on a node and than right click to a diredtion
+        - user can drag the sceleton by clicking on a node and then draging it
+        - user can rotate the bones by selecting a node and than draging a child node, all descendants rotete with it
+
+.. |screenshot01| image:: screenshots/Screenshot01.png
+        :width: 100
+        :height: 100
