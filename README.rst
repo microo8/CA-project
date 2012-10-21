@@ -34,6 +34,6 @@ Progress
         - user can drag the sceleton by clicking on a node and then draging it
         - user can rotate the bones by selecting a node and than draging a child node, all descendants rotete with it
 
-.. |screenshot01| image:: CA-project/blob/master/screenshots/Screenshot01.png
+.. |screenshot01| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot01.png
         :width: 100
         :height: 100
