@@ -29,11 +29,19 @@ Implementation
 Progress
 --------
 
-- Scene with sceleton: |screenshot01|
+- Scene with sceleton: 
         - user can create new bones by clicking on a node and than right click to a diredtion
         - user can drag the sceleton by clicking on a node and then draging it
         - user can rotate the bones by selecting a node and than draging a child node, all descendants rotete with it
+- Saving and loading sceletons
+
+|screenshot01|
+|screenshot02|
+|screenshot03|
+|screenshot02|
+
 
 .. |screenshot01| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot01.png
-        :width: 100
-        :height: 100
+.. |screenshot02| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot02.png
+.. |screenshot03| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot03.png
+.. |screenshot04| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot04.png
