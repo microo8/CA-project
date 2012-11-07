@@ -11,10 +11,8 @@ PARTICLE_SIZE = 5
 STEP = 0.5
 
 class Particle:
-    def __init__(self, parrent, position, mass):
+    def __init__(self, parrent, position):
         self.position = position
-        self.velocity = np.array([0,0,0])
-        self.mass = mass
         self.parrent = parrent
         if self.parrent is not None:
             self.parrent.descendants.append(self)
@@ -26,8 +24,8 @@ class System:
         if filename is None:
             self.drawarea = drawarea
             alloc = self.drawarea.get_allocation()
-            head = Particle(None, np.array([alloc.width/2, alloc.height/4,0]), 1)
-            child = Particle(head, np.array([alloc.width/2, alloc.height/4+BONE_LENGTH,0]), 1)
+            head = Particle(None, np.array([alloc.width/2, alloc.height/4,0]))
+            child = Particle(head, np.array([alloc.width/2, alloc.height/4+BONE_LENGTH,0]))
             self.particles = [head, child]
         else:
             with open(filename) as f:
@@ -45,7 +43,18 @@ class System:
 
     def forward(self, step):
         time.sleep(step)
-        
+
+    def ik(self, tip, target):
+        move_vecs = []
+        for part in self:
+            totip = tip - part.position
+            totarget = target - tip
+            move_vec = np.cross(totip, np.array([0,0,1]))
+            grad = move_vec.dot(totarget)
+            move_vecs.append(move_vec * grad)
+        for mv in move_vecs:
+            part.position -= mv
+
 
 
 class DrawArea:
@@ -126,7 +135,7 @@ class DrawArea:
                     pos -= self.selected_particle.position
                     pos /= np.linalg.norm(pos)
                     pos *= BONE_LENGTH
-                    part = Particle(self.selected_particle, self.selected_particle.position + pos, 1)
+                    part = Particle(self.selected_particle, self.selected_particle.position + pos)
                     self.sys.particles.append(part)
                     self.drawarea.queue_draw()
                 self.pressed2 = False
