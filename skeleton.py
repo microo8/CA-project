@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk, Gdk, GObject
+GObject.threads_init()
+Gdk.threads_enter()
 from gtklib import ObjGetter
 import numpy as np
 import os, pickle, time
-from threading import Thread
+from threading import Thread, Event
 
 BONE_LENGTH = 30
 PARTICLE_SIZE = 5
@@ -17,6 +19,19 @@ class Particle:
         if self.parrent is not None:
             self.parrent.descendants.append(self)
         self.descendants = []
+    
+    def _path(self, tip, path):
+        if tip == self:
+            return True, path + [self]
+        for desc in self.descendants:
+            find, path_d = desc._path(tip, path + [self])
+            if find:
+                return True, path_d
+        return False, []
+
+    def path(self, target):
+        _, path = self._path(target, [])
+        return path
 
 
 class System:
@@ -41,25 +56,78 @@ class System:
         for desc in part.descendants:
             self.rotate_particles(desc, rot, center)
 
-    def forward(self, step):
-        time.sleep(step)
-
     def ik(self, tip, target):
-        move_vecs = []
-        for part in self:
-            totip = tip - part.position
-            totarget = target - tip
-            move_vec = np.cross(totip, np.array([0,0,1]))
-            grad = move_vec.dot(totarget)
-            move_vecs.append(move_vec * grad)
-        for mv in move_vecs:
-            part.position -= mv
+        path = self.particles[0].path(tip)
+        path_max = (len(path)-1)*BONE_LENGTH
+        headTotarget = np.linalg.norm(self.particles[0].position - target)
+        tipTotarget = np.linalg.norm(tip.position - target)
+        if headTotarget - path_max < tipTotarget + 0.5:
+            for i, part in enumerate(path):
+                totip = tip.position - part.position
+                totarget = target - tip.position
+                move_vec = np.cross(totip, np.array([0,0,1]))
+                #grad = move_vec.dot(totarget)
+                grad = (move_vec / np.linalg.norm(move_vec)).dot(totarget / np.linalg.norm(totarget))
+                angle = -grad*0.3
+                if i + 1 < len(path):
+                    desc = path[i+1]
+                    if angle > 0:
+                        angle = np.cos(angle)
+                        sin_angle = np.sqrt(1-angle**2)
+                        rot = np.array([[angle, -sin_angle, 0],
+                                        [sin_angle, angle,  0],
+                                        [0,0,1]])
+                        self.rotate_particles(desc, rot, part.position)
+                    else:
+                        angle = np.cos(angle)
+                        sin_angle = np.sqrt(1-angle**2)
+                        rot = np.array([[angle, sin_angle, 0],
+                                        [-sin_angle, angle,  0],
+                                        [0,0,1]])
+                        self.rotate_particles(desc, rot, part.position)
 
+
+class AnimIK(Thread):
+    
+    stopthread = Event()
+    
+    def __init__(self, sys, tip, target, drawarea):
+        Thread.__init__(self)
+        self.stopthread.clear()
+        self.sys = sys
+        self.target = target
+        self.tip = tip
+        self.drawarea = drawarea
+        self.length = 1000
+
+    def run(self):
+        while not self.stopthread.isSet():
+            self.sys.ik(self.tip, self.target)
+            self.sys.ik(self.tip, self.target)
+            length = np.linalg.norm(self.tip.position - self.target)
+            if abs(self.length - length) < 0.1 or length < 0.5:
+                self.stopthread.set()
+            self.length = length
+            Gdk.threads_enter()
+            try:
+                alloc = self.drawarea.get_allocation()
+                rect = Gdk.Rectangle()
+                rect.x, rect.y, rect.width, rect.height = alloc.x, alloc.y, alloc.width, alloc.height
+                win = self.drawarea.get_window()
+                if win is not None:
+                    win.invalidate_rect(rect,True)
+            finally:
+                Gdk.threads_leave()
+            time.sleep(0.03)
+
+    def stop(self):
+        self.stopthread.set()
 
 
 class DrawArea:
     def __init__(self):
         self.sys = None
+        self.aik = None
         self.width = 1
         self.height = 1
         self.pressed1 = False
@@ -167,13 +235,21 @@ class DrawArea:
             self.sys.rotate_particles(self.selected_particle2, rot, self.selected_particle.position)
             self.drawarea.queue_draw()
         elif self.pressed1 and self.selected_particle is not None:
-            inv_tra = np.linalg.inv(self.tra)
-            pos = inv_tra.dot(np.array([event.x, event.y, 0]))
-            delta = self.selected_particle.position - pos
-            for part in self.sys:
-                part.position -= delta
-            self.drawarea.queue_draw()
-
+            if len(self.selected_particle.descendants) == 0:
+                inv_tra = np.linalg.inv(self.tra)
+                target = inv_tra.dot(np.array([event.x, event.y, 0]))
+                if self.aik is not None and self.aik.is_alive():
+                    self.aik.target = target
+                else:
+                    self.aik = AnimIK(self.sys, self.selected_particle, target, self.drawarea)
+                    self.aik.start()
+            else:
+                inv_tra = np.linalg.inv(self.tra)
+                pos = inv_tra.dot(np.array([event.x, event.y, 0]))
+                delta = self.selected_particle.position - pos
+                for part in self.sys:
+                    part.position -= delta
+                self.drawarea.queue_draw()
 
 class MainWindow(ObjGetter):
     def __init__(self):
@@ -185,7 +261,6 @@ class MainWindow(ObjGetter):
 
     def get_signals(self):
         signals = {"destroy" : Gtk.main_quit,
-                   "forward" : self.forward,
                    "draw" : self.darea.draw,
                    "resize" : self.darea.resize,
                    "about" : self.about,
@@ -236,11 +311,9 @@ class MainWindow(ObjGetter):
         else:
             dialog.destroy()
 
-    def forward(self, button=None):
-        #TODO
-        pass
-
 
 if __name__ == '__main__':
     win = MainWindow()
+    Gdk.threads_enter()
     Gtk.main()
+    Gdk.threads_leave()
