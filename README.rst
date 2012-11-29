@@ -38,22 +38,24 @@ Progress
         - user can drag leaf joint and the arm (from root to the leaf) will follow the mouse cursor (while mouse button is down)
 - Saving and loading sceletons
 
+The application:
+
 |screenshot01|
+
+Rotating the bones:
+
 |screenshot02|
+
+Draging the sceleton:
+
 |screenshot03|
+
+Saving and loading:
+
 |screenshot04|
 
 
-The application:
-
 .. |screenshot01| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot01.png
-
-Rotating bones:
-
 .. |screenshot02| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot02.png
-
-Draging the sceleton:
 .. |screenshot03| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot03.png
-
-Saving the created sceleton:
 .. |screenshot04| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot04.png
