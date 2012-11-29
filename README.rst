@@ -54,8 +54,13 @@ Saving and loading:
 
 |screenshot04|
 
+Inverse kinematics, draging leaf joint with the mouse:
+
+|screenshot05|
+
 
 .. |screenshot01| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot01.png
 .. |screenshot02| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot02.png
 .. |screenshot03| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot03.png
 .. |screenshot04| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot04.png
+.. |screenshot05| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot05.png
