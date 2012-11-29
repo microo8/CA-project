@@ -30,9 +30,12 @@ Progress
 --------
 
 - Scene with sceleton: 
-        - user can create new bones by clicking on a node and than right click to a diredtion
-        - user can drag the sceleton by clicking on a node and then draging it
-        - user can rotate the bones by selecting a node and than draging a child node, all descendants rotete with it
+        - user can create new bones by clicking on a joint and than right click to a diredtion
+        - user can drag the sceleton by clicking on a joint and then draging it
+- Forward kinematics:
+        - user can rotate the bones by selecting a joint and than draging a child joint, all descendants rotate with it
+- Inverse kinematics:
+        - user can drag leaf joint and the arm (from root to the leaf) will follow the mouse cursor (while mouse button is down)
 - Saving and loading sceletons
 
 |screenshot01|
@@ -41,7 +44,16 @@ Progress
 |screenshot04|
 
 
+The application:
+
 .. |screenshot01| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot01.png
+
+Rotating bones:
+
 .. |screenshot02| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot02.png
+
+Draging the sceleton:
 .. |screenshot03| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot03.png
+
+Saving the created sceleton:
 .. |screenshot04| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot04.png
