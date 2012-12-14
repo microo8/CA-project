@@ -68,7 +68,7 @@ class System:
                 move_vec = np.cross(totip, np.array([0,0,1]))
                 #grad = move_vec.dot(totarget)
                 grad = (move_vec / np.linalg.norm(move_vec)).dot(totarget / np.linalg.norm(totarget))
-                angle = -grad*0.3
+                angle = -grad*0.2
                 if i + 1 < len(path):
                     desc = path[i+1]
                     if angle > 0:
@@ -105,7 +105,7 @@ class AnimIK(Thread):
             self.sys.ik(self.tip, self.target)
             self.sys.ik(self.tip, self.target)
             length = np.linalg.norm(self.tip.position - self.target)
-            if abs(self.length - length) < 0.1 or length < 0.5:
+            if abs(self.length - length) < 0.01 or length < 0.1:
                 self.stopthread.set()
             self.length = length
             Gdk.threads_enter()
@@ -118,7 +118,7 @@ class AnimIK(Thread):
                     win.invalidate_rect(rect,True)
             finally:
                 Gdk.threads_leave()
-            time.sleep(0.03)
+            time.sleep(0.02)
 
     def stop(self):
         self.stopthread.set()
