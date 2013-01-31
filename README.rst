@@ -60,7 +60,7 @@ Inverse kinematics, draging leaf joint with the mouse:
 
 
 .. |screenshot01| image:: screenshots/Screenshot01.png
-.. |screenshot02| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot02.png
-.. |screenshot03| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot03.png
-.. |screenshot04| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot04.png
-.. |screenshot05| image:: https://github.com/microo8/CA-project/raw/master/screenshots/Screenshot05.png
+.. |screenshot02| image:: screenshots/Screenshot02.png
+.. |screenshot03| image:: screenshots/Screenshot03.png
+.. |screenshot04| image:: screenshots/Screenshot04.png
+.. |screenshot05| image:: screenshots/Screenshot05.png
